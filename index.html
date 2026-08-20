@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>소재 도우미</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbf3ee;
+    --surface:#ffffff;
+    --surface-2:#f6e9e1;
+    --line: rgba(74,63,53,.10);
+    --coral:#f0997b;
+    --coral-dark:#c9603f;
+    --coral-soft:#fbe2d8;
+    --mint:#8fc7b0;
+    --mint-dark:#4f8f76;
+    --mint-soft:#e3f3ec;
+    --ink:#4a3f35;
+    --text:#5a4d41;
+    --text-dim:#a89686;
+    --danger:#e08a6f;
+    --radius:22px;
+    --shadow:0 10px 26px rgba(201,140,110,.18);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 10% 6%, rgba(240,153,123,.10), transparent 42%),
+      radial-gradient(circle at 90% 94%, rgba(143,199,176,.12), transparent 42%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Gowun Dodum', 'Noto Sans KR', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:780px; margin:0 auto; padding:52px 24px 80px;}
+  header{text-align:center; margin-bottom:30px;}
+  header h1{
+    font-family:'Jua', sans-serif;
+    font-size:32px;
+    font-weight:400;
+    color:var(--coral-dark);
+    letter-spacing:1px;
+    margin:0 0 10px;
+  }
+  header p{color:var(--text-dim); font-size:14px; margin:0;}
+
+  .mode-toggle{
+    display:flex; justify-content:center; gap:10px; margin-bottom:24px;
+  }
+  .mode-btn{
+    background:var(--surface); border:1.5px solid var(--line); color:var(--text-dim);
+    font-family:'Gowun Dodum', sans-serif; font-size:13.5px; padding:9px 20px; border-radius:999px; cursor:pointer;
+    transition:.15s;
+  }
+  .mode-btn.active{background:var(--coral-soft); border-color:var(--coral); color:var(--coral-dark);}
+
+  .input-box{
+    background:var(--surface); border:1.5px solid var(--line); border-radius:var(--radius);
+    padding:20px; margin-bottom:14px; box-shadow:var(--shadow);
+  }
+  .input-box textarea{
+    width:100%; min-height:78px; background:transparent; border:none; color:var(--ink);
+    font-family:'Gowun Dodum', sans-serif; font-size:14.5px; line-height:1.7; resize:vertical; padding:0;
+  }
+  .input-box textarea:focus{outline:none;}
+  .input-box textarea::placeholder{color:var(--text-dim);}
+  .input-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px;}
+  .hint{font-size:11.5px; color:var(--text-dim);}
+  .go-btn{
+    background:var(--coral);
+    border:none; color:#fff; font-family:'Jua', sans-serif; font-weight:400; font-size:14px;
+    padding:11px 24px; border-radius:999px; cursor:pointer; transition:transform .12s, background .15s;
+  }
+  .go-btn:hover{background:var(--coral-dark);}
+  .go-btn:active{transform:scale(.95);}
+  .go-btn:disabled{opacity:.5; cursor:default;}
+
+  .status-row{
+    display:flex; align-items:center; justify-content:space-between; margin:6px 4px 22px;
+    font-size:12.5px; color:var(--text-dim);
+  }
+  .status-row button{
+    background:none; border:none; color:var(--text-dim); font-family:inherit; font-size:12.5px;
+    text-decoration:underline; cursor:pointer; padding:0;
+  }
+  .status-row button:hover{color:var(--coral-dark);}
+
+  .loading{
+    text-align:center; color:var(--text-dim); font-size:13.5px; padding:30px 0; display:none;
+  }
+  .loading.show{display:block;}
+  .error-box{
+    display:none; background:var(--coral-soft); border:1.5px solid var(--danger);
+    color:var(--coral-dark); font-size:13px; padding:12px 16px; border-radius:14px; margin-bottom:16px;
+  }
+  .error-box.show{display:block;}
+
+  .result-grid{display:flex; flex-direction:column; gap:14px;}
+  .slip{
+    background:var(--surface); color:var(--ink); border-radius:18px;
+    box-shadow:var(--shadow); padding:18px 20px; position:relative;
+    border:1.5px solid var(--line);
+    opacity:0; transform:translateY(14px); animation:slipIn .4s ease forwards;
+  }
+  @keyframes slipIn{ to{opacity:1; transform:translateY(0);} }
+  .slip .slip-title{
+    font-family:'Jua', sans-serif; font-size:17px; font-weight:400; margin-bottom:8px; color:var(--mint-dark);
+  }
+  .slip .slip-desc{font-size:13.5px; line-height:1.7; color:var(--text);}
+
+  .empty-hint{text-align:center; color:var(--text-dim); font-size:13.5px; padding:24px 0;}
+  footer{text-align:center; color:var(--text-dim); font-size:11.5px; margin-top:34px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>소재 도우미</h1>
+    <p>편하게 적어보세요, 겹치는 건 빼고 새 걸로 골라드릴게요</p>
+  </header>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="material">소재 · 설정</button>
+    <button class="mode-btn" data-mode="title">표지 · 제목</button>
+  </div>
+
+  <div class="input-box">
+    <textarea id="queryInput" placeholder="예) 다크판타지에서 원수가 연인 되는 소재 뭐 있을까? / 회사 배경 집착광공 표지 제목 추천해줘 / 그냥 '흡혈귀'만 적어도 돼요"></textarea>
+    <div class="input-row">
+      <span class="hint">Ctrl/Cmd + Enter 로도 실행돼요</span>
+      <button class="go-btn" id="goBtn">추천받기</button>
+    </div>
+  </div>
+
+  <div class="status-row">
+    <span id="historyCount">지금까지 추천받은 것 0개</span>
+    <button id="resetHistBtn" type="button">기록 초기화</button>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+  <div class="loading" id="loadingBox">소재를 골라보는 중이에요…</div>
+
+  <div class="result-grid" id="resultGrid">
+    <div class="empty-hint">위에 편하게 적고 추천받기를 눌러보세요</div>
+  </div>
+
+  <footer>겹치는 건 최대한 걸러드려요. 마음에 안 들면 다시 눌러보세요.</footer>
+</div>
+
+<script>
+const STORAGE_KEY = 'ai-material-picker-v1';
+let mode = 'material';
+let history = { material: [], title: [] };
+let hasStorage = false;
+
+const modeConfig = {
+  material: {
+    label: '소재 · 설정',
+    system: `당신은 한국 웹소설/캐릭터 콘텐츠 창작자를 돕는 소재 추천 도우미입니다.
+사용자가 원하는 분위기, 장르, 설정, 혹은 그냥 단어 하나만 입력해도 그것을 실마리로 삼아 어울리는 창작 소재/설정 아이디어를 5개 추천하세요.
+각 아이디어는 12자 이내의 짧은 제목과, 1~2문장으로 된 구체적인 설명으로 구성하세요.
+반드시 아래 "이미 추천한 목록"에 있는 것과 겹치지 않는, 새로운 아이디어만 추천하세요.
+다른 설명 없이 JSON 배열로만 답하세요. 형식: [{"title":"짧은 제목","desc":"설명"}]`
+  },
+  title: {
+    label: '표지 · 제목',
+    system: `당신은 한국 웹소설/캐릭터 콘텐츠의 표지 제목과 카피를 짓는 도우미입니다.
+사용자가 적은 분위기, 설정, 키워드를 바탕으로 표지에 쓸 만한 짧고 강렬한 제목 또는 캐치프레이즈를 5개 추천하세요.
+각 항목은 제목(15자 이내)과, 왜 이 제목이 어울리는지 1문장 설명으로 구성하세요.
+반드시 아래 "이미 추천한 목록"에 있는 것과 겹치지 않는, 새로운 것만 추천하세요.
+다른 설명 없이 JSON 배열로만 답하세요. 형식: [{"title":"제목","desc":"설명"}]`
+  }
+};
+
+function updateHistoryCount(){
+  document.getElementById('historyCount').textContent =
+    `지금까지 추천받은 것 ${history[mode].length}개`;
+}
+
+async function loadState(){
+  try{
+    if(window.storage){
+      hasStorage = true;
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        if(parsed && parsed.material && parsed.title){
+          history = parsed;
+        }
+      }
+    }
+  }catch(e){ /* 저장된 값 없으면 기본값 사용 */ }
+  updateHistoryCount();
+}
+
+async function saveState(){
+  if(!hasStorage) return;
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(history), false);
+  }catch(e){ /* 저장 실패해도 동작은 계속 */ }
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    updateHistoryCount();
+    document.getElementById('resultGrid').innerHTML =
+      '<div class="empty-hint">위에 입력하고 추천받기를 눌러보세요</div>';
+  });
+});
+
+document.getElementById('resetHistBtn').addEventListener('click', () => {
+  history[mode] = [];
+  saveState();
+  updateHistoryCount();
+});
+
+function showError(msg){
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.classList.add('show');
+}
+function hideError(){
+  document.getElementById('errorBox').classList.remove('show');
+}
+
+async function requestRecommendations(){
+  const input = document.getElementById('queryInput');
+  const query = input.value.trim();
+  if(!query){
+    showError('먼저 원하는 느낌이나 키워드를 적어주세요.');
+    return;
+  }
+  hideError();
+
+  const goBtn = document.getElementById('goBtn');
+  goBtn.disabled = true;
+  document.getElementById('loadingBox').classList.add('show');
+  document.getElementById('resultGrid').innerHTML = '';
+
+  const avoidList = history[mode].slice(-40);
+  const avoidText = avoidList.length
+    ? `\n\n이미 추천한 목록 (겹치지 않게 피해주세요): ${avoidList.join(', ')}`
+    : '';
+
+  try{
+    const response = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: modeConfig[mode].system,
+        query: query + avoidText
+      })
+    });
+
+    if(!response.ok){
+      throw new Error('요청이 실패했어요 (' + response.status + ')');
+    }
+
+    const data = await response.json();
+    const textBlock = (data.content || []).find(c => c.type === 'text');
+    if(!textBlock){
+      throw new Error('응답을 읽을 수 없어요.');
+    }
+
+    let clean = textBlock.text.trim();
+    clean = clean.replace(/```json/g, '').replace(/```/g, '').trim();
+    let items;
+    try{
+      items = JSON.parse(clean);
+    }catch(e){
+      throw new Error('결과를 해석하지 못했어요. 다시 시도해주세요.');
+    }
+    if(!Array.isArray(items) || items.length === 0){
+      throw new Error('추천 결과가 비어있어요. 다시 시도해주세요.');
+    }
+
+    const grid = document.getElementById('resultGrid');
+    items.forEach((item, i) => {
+      if(!item || !item.title) return;
+      const slip = document.createElement('div');
+      slip.className = 'slip';
+      slip.style.animationDelay = (i * 80) + 'ms';
+
+      const t = document.createElement('div');
+      t.className = 'slip-title';
+      t.textContent = item.title;
+
+      const d = document.createElement('div');
+      d.className = 'slip-desc';
+      d.textContent = item.desc || '';
+
+      slip.appendChild(t);
+      slip.appendChild(d);
+      grid.appendChild(slip);
+
+      history[mode].push(item.title);
+    });
+
+    saveState();
+    updateHistoryCount();
+
+  }catch(err){
+    showError(err.message || '알 수 없는 오류가 발생했어요.');
+  }finally{
+    goBtn.disabled = false;
+    document.getElementById('loadingBox').classList.remove('show');
+  }
+}
+
+document.getElementById('goBtn').addEventListener('click', requestRecommendations);
+document.getElementById('queryInput').addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    requestRecommendations();
+  }
+});
+
+loadState();
+</script>
+</body>
+</html>
